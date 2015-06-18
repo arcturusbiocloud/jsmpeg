@@ -53,8 +53,13 @@
 		// Setup the WebSocket connection and start the player
 		var client = new WebSocket( 'ws://horus01.arcturus.io:8084/' );
 		var canvas = document.getElementById('videoCanvas');
-		StartSwitchStreaming();
-		var player = new jsmpeg(client, {canvas:canvas});
+		var player;
+		
+		// start 1st channel after 2 seconds
+		setTimeout(function() { 
+		  StartSwitchStreaming();
+		  player = new jsmpeg(client, {canvas:canvas});
+	  }, 2000);
 		
 		// Setup the WebSocket connection and start the player
 		var client1 = new WebSocket( 'ws://horus01.arcturus.io:8085/' );
