@@ -1,4 +1,3 @@
-
 if( process.argv.length < 3 ) {
 	console.log(
 		'Usage: \n' +
@@ -15,8 +14,14 @@ var STREAM_SECRET = process.argv[2],
 var width = 320,
 	height = 240;
 
-// Websocket Server
+var dev_video = "video0";
+var ps = require('ps-node');
+var exec = require('child_process').exec, child;
+var sleep = require('sleep');
 var socketServer = new (require('ws').Server)({port: WEBSOCKET_PORT});
+var http = require('http');
+var static = require('node-static');
+
 socketServer.on('connection', function(socket) {
 	// Send magic bytes and video size to the newly connected socket
 	// struct { char magic[4]; unsigned short width, height;}
@@ -28,9 +33,49 @@ socketServer.on('connection', function(socket) {
 
 	console.log( 'New WebSocket Connection ('+socketServer.clients.length+' total)' );
 	
-	socket.on('close', function(code, message){
+	socket.on('close', function(code, message) {
 		console.log( 'Disconnected WebSocket ('+socketServer.clients.length+' total)' );
 	});
+	
+	socket.on('message', function(message) {
+	  ps.lookup({ command: 'avconv' }, function(err, resultList ) {
+      if (err) {
+        throw new Error( err );
+      }
+      
+      resultList.forEach(function(process) {
+        if (process) {
+          console.log( 'Killing PID: %s, COMMAND: %s, ARGUMENTS: %s', process.pid, process.command, process.arguments );
+          
+          // A simple pid lookup 
+          ps.kill( process.pid, function( err ) {
+            if (err) {
+              throw new Error( err );
+            } else {
+              console.log( 'Process %s has been killed!', process.pid );
+            }
+          });  
+        }
+      });
+      
+      path_to_exec = "";
+      if (dev_video == "video0") {
+        path_to_exec = "avconv -s 640x480 -f video4linux2 -i /dev/video0 -f mpeg1video -b 800k -r 30 http://127.0.0.1:8082/streaming/abc/640/480/";
+        dev_video = "video1";
+      } else {
+        path_to_exec = "avconv -s 640x480 -f video4linux2 -i /dev/video1 -f mpeg1video -b 800k -r 30 http://127.0.0.1:8083/streaming/abc/640/480/";
+        dev_video = "video0"; 
+      }
+      sleep.sleep(1);
+      child = exec(path_to_exec,
+        function (error, stdout, stderr) {
+          if (error !== null) {
+            console.log('exec error: ' + error);
+          }
+      });
+    });
+	});
+		
 });
 
 socketServer.broadcast = function(data, opts) {
@@ -44,31 +89,39 @@ socketServer.broadcast = function(data, opts) {
 	}
 };
 
+var fileServer = new static.Server("./public");
 
 // HTTP Server to accept incomming MPEG Stream
 var streamServer = require('http').createServer( function(request, response) {
+	request.addListener('end', function() {
+	  fileServer.serve(request, response);
+	}).resume();
+	
 	var params = request.url.substr(1).split('/');
 
-	if( params[0] == STREAM_SECRET ) {
-		width = (params[1] || 320)|0;
-		height = (params[2] || 240)|0;
+  if (params [0] == "streaming") {
+  	if (params[1] == STREAM_SECRET ) {
+  		width = (params[1] || 320)|0;
+  		height = (params[2] || 240)|0;
 		
-		console.log(
-			'Stream Connected: ' + request.socket.remoteAddress + 
-			':' + request.socket.remotePort + ' size: ' + width + 'x' + height
-		);
-		request.on('data', function(data){
-			socketServer.broadcast(data, {binary:true});
-		});
+  		console.log(
+  			'Stream Connected: ' + request.socket.remoteAddress + 
+  			':' + request.socket.remotePort + ' size: ' + width + 'x' + height
+  		);
+  		request.on('data', function(data){
+  			socketServer.broadcast(data, {binary:true});
+  		});
+  	} else {
+  		console.log(
+  			'Failed Stream Connection: '+ request.socket.remoteAddress + 
+  			request.socket.remotePort + ' - wrong secret.'
+  		);
+  		response.end();
+  	}
 	}
-	else {
-		console.log(
-			'Failed Stream Connection: '+ request.socket.remoteAddress + 
-			request.socket.remotePort + ' - wrong secret.'
-		);
-		response.end();
-	}
-}).listen(STREAM_PORT);
+});
+
+streamServer.listen(STREAM_PORT);
 
 console.log('Listening for MPEG Stream on http://127.0.0.1:'+STREAM_PORT+'/<secret>/<width>/<height>');
 console.log('Awaiting WebSocket connections on ws://127.0.0.1:'+WEBSOCKET_PORT+'/');
