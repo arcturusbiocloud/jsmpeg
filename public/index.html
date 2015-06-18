@@ -15,6 +15,12 @@
 			width: 640px;
 			height: 480px;
 		}
+		#videoCanvas1 {
+			/* Always stretch the canvas to 640x480, regardless of its
+			internal size. */
+			width: 640px;
+			height: 480px;
+		}
 	</style>
 </head>
 <body>
@@ -30,13 +36,35 @@
 			<a href="http://www.apple.com/safari/">Safari</a> or Internet Explorer 10
 		</p>
 	</canvas>
+	
+	<canvas id="videoCanvas1" width="640" height="480">
+		<p>
+			Please use a browser that supports the Canvas Element, like
+			<a href="http://www.google.com/chrome">Chrome</a>,
+			<a href="http://www.mozilla.com/firefox/">Firefox</a>,
+			<a href="http://www.apple.com/safari/">Safari</a> or Internet Explorer 10
+		</p>
+	</canvas>
+	
+	<input type="button" value="Turn on/switch streaming" onclick="javascript:StartSwitchStreaming();">
+	
 	<script type="text/javascript" src="jsmpg.js"></script>
 	<script type="text/javascript">
 		// Setup the WebSocket connection and start the player
-		var client = new WebSocket( 'ws://example.com:8084/' );
-
+		var client = new WebSocket( 'ws://horus01.arcturus.io:8084/' );
 		var canvas = document.getElementById('videoCanvas');
+		StartSwitchStreaming();
 		var player = new jsmpeg(client, {canvas:canvas});
+		
+		// Setup the WebSocket connection and start the player
+		var client1 = new WebSocket( 'ws://horus01.arcturus.io:8085/' );
+		var canvas1 = document.getElementById('videoCanvas1');
+		var player1 = new jsmpeg(client1, {canvas:canvas1});
+		
+		function StartSwitchStreaming() {
+		  client.send("start switch streaming");
+		};
 	</script>
+	
 </body>
 </html>
