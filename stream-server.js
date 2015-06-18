@@ -89,7 +89,7 @@ socketServer.broadcast = function(data, opts) {
 	}
 };
 
-var fileServer = new static.Server("./public");
+var fileServer = new static.Server("/home/pi/jsmpeg/public");
 
 // HTTP Server to accept incomming MPEG Stream
 var streamServer = require('http').createServer( function(request, response) {
