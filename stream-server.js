@@ -101,8 +101,8 @@ var streamServer = require('http').createServer( function(request, response) {
 
   if (params [0] == "streaming") {
   	if (params[1] == STREAM_SECRET ) {
-  		width = (params[1] || 320)|0;
-  		height = (params[2] || 240)|0;
+  		width = (params[2] || 320)|0;
+  		height = (params[3] || 240)|0;
 		
   		console.log(
   			'Stream Connected: ' + request.socket.remoteAddress + 
