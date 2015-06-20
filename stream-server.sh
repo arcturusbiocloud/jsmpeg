@@ -1,18 +1,16 @@
 #! /bin/bash
 # /etc/init.d/stream-server.sh
 
-STREAM_SERVER=/home/pi/jsmpeg/stream-server.js
-
 case "$1" in
   start)
     echo "Starting stream-server"
-    sudo -u pi forever start $STREAM_SERVER abc 8082 8084
-    sudo -u pi forever start $STREAM_SERVER abc 8083 8085
+    su pi -c 'node /home/pi/jsmpeg/stream-server.js abc 8082 8084 < /dev/null &'
+    su pi -c 'node /home/pi/jsmpeg/stream-server.js abc 8083 8085 < /dev/null &'
     ;;
   stop)
     echo "Stopping stream-server"
-    sudo -u pi forever stop $STREAM_SERVER abc 8082 8084
-    sudo -u pi forever stop $STREAM_SERVER abc 8083 8085
+    sudo killall node
+    sudo killall avconv
     ;;
   *)
     echo "Usage: /etc/init.d/stream-server.sh {start|stop}"
