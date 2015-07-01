@@ -60,10 +60,10 @@ socketServer.on('connection', function(socket) {
       
       path_to_exec = "";
       if (dev_video == "video0") {
-        path_to_exec = "avconv -s 640x480 -f video4linux2 -i /dev/video0 -f mpeg1video -b 800k -r 30 http://127.0.0.1:8082/streaming/abc/640/480/";
+        path_to_exec = "avconv -s 640x480 -f video4linux2 -i /dev/video1 -f mpeg1video -b 800k -r 30 http://127.0.0.1:8082/streaming/abc/640/480/";
         dev_video = "video1";
       } else {
-        path_to_exec = "avconv -s 640x480 -f video4linux2 -i /dev/video1 -f mpeg1video -b 800k -r 30 http://127.0.0.1:8083/streaming/abc/640/480/";
+        path_to_exec = "avconv -s 640x480 -f video4linux2 -i /dev/video2 -f mpeg1video -b 800k -r 30 http://127.0.0.1:8083/streaming/abc/640/480/";
         dev_video = "video0"; 
       }
       sleep.sleep(1);
